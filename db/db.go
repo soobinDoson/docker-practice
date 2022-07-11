@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	pb "github.com/soobinDoson/docker-practice.git/proto"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -51,4 +52,33 @@ func (d *DB) ConnectDb(sqlDSN string) error {
 	// sqlDb.SetMaxOpenConns(100)
 	d.engine = db
 	return nil
+}
+
+func (d *DB) listUserPartnerQuery(req *pb.UserPartnerRequest) *gorm.DB {
+	ss := d.engine.Table(tblUserPartner)
+	if req.GetUserId() != "" {
+		ss.Where(tblUserPartner+".user_id = ?", req.GetUserId())
+	}
+	if req.GetPhone() != "" {
+		ss.Where(tblUserPartner+".phone = ?", req.GetPhone())
+	}
+	return ss
+}
+
+func (d *DB) ListUserPartner(rq *pb.UserPartnerRequest) ([]*pb.UserPartner, error) {
+	log.Println("req: ", rq)
+	var userParters []*pb.UserPartner
+	ss := d.listUserPartnerQuery(rq)
+	if rq.GetLimit() != 0 {
+		ss.Limit(int(rq.GetLimit()))
+	} else {
+		if rq.GetLimit() != 0 {
+			ss.Limit(int(rq.GetLimit()))
+		}
+	}
+	err := ss.Order("created desc").Find(&userParters).Error
+	if err != nil {
+		return nil, err
+	}
+	return userParters, nil
 }

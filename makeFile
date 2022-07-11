@@ -1,3 +1,4 @@
 start:
-	go build
-	go run .
+	go run . start
+createDb:
+	go run . createDb
